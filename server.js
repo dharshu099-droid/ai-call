@@ -18,9 +18,7 @@ app.use(express.urlencoded({ extended: true }));
 const audioFolder = path.join(__dirname, 'audio');
 
 if (!fs.existsSync(audioFolder)) {
-
     fs.mkdirSync(audioFolder);
-
 }
 
 app.use('/audio', express.static(audioFolder));
@@ -118,7 +116,7 @@ app.post('/generate-tts', async (req, res) => {
 
         // FILE NAME
         const fileName =
-        `audio_${Date.now()}.mp3`;
+        `audio_${Date.now()}.wav`;
 
         // FILE PATH
         const filePath =
@@ -175,7 +173,7 @@ app.get('/test-tamil', async (req, res) => {
             'https://api.sarvam.ai/text-to-speech',
 
             {
-                inputs: ['வணக்கம்'],
+                inputs: ['வணக்கம் எப்படி இருக்கீங்க'],
                 target_language_code: 'ta-IN',
                 speaker: 'anushka'
             },
@@ -197,11 +195,12 @@ app.get('/test-tamil', async (req, res) => {
 
         // BASE64 AUDIO
         const base64Audio =
-        response.data.audios[0];
+        response.data.audios[0]
+        .replace(/^data:audio\/wav;base64,/, '');
 
         // FILE PATH
         const filePath =
-        path.join(audioFolder, 'test.mp3');
+        path.join(audioFolder, 'test.wav');
 
         // SAVE FILE
         fs.writeFileSync(
@@ -212,7 +211,11 @@ app.get('/test-tamil', async (req, res) => {
 
         );
 
-        res.send('Tamil audio generated');
+        res.send(`
+            <audio controls autoplay>
+                <source src="/audio/test.wav" type="audio/wav">
+            </audio>
+        `);
 
     } catch (err) {
 
@@ -240,8 +243,10 @@ app.get('/', (req, res) => {
 // START SERVER
 // =====================================
 
-app.listen(5000, () => {
+const PORT = process.env.PORT || 5000;
 
-    console.log('Server running on port 5000');
+app.listen(PORT, '0.0.0.0', () => {
+
+    console.log(`Server running on port ${PORT}`);
 
 });
