@@ -20,8 +20,10 @@ app.use(express.urlencoded({ extended: true }));
 const audioFolder = path.join(__dirname, 'audio');
 
 if (!fs.existsSync(audioFolder)) {
-    fs.mkdirSync(audioFolder);
+    fs.mkdirSync(audioFolder, { recursive: true });
 }
+
+console.log("Audio folder:", audioFolder);
 
 app.use('/audio', express.static(audioFolder));
 
@@ -29,19 +31,19 @@ app.use('/audio', express.static(audioFolder));
 // DEBUG ROUTES
 // =====================================
 
+app.get('/audio-path', (req, res) => {
+    res.send(audioFolder);
+});
+
 app.get('/list-audio', (req, res) => {
     try {
         const files = fs.readdirSync(audioFolder);
         res.json(files);
     } catch (err) {
-        res.status(500).json({
+        res.json({
             error: err.message
         });
     }
-});
-
-app.get('/audio-path', (req, res) => {
-    res.send(audioFolder);
 });
 
 // =====================================
@@ -76,7 +78,6 @@ app.post('/save-response', (req, res) => {
 
             console.log('Saved');
             res.send('Saved');
-
         }
     );
 });
@@ -102,8 +103,10 @@ app.post('/generate-tts', async (req, res) => {
             },
             {
                 headers: {
-                    'api-subscription-key': process.env.SARVAM_API_KEY,
-                    'Content-Type': 'application/json'
+                    'api-subscription-key':
+                    process.env.SARVAM_API_KEY,
+                    'Content-Type':
+                    'application/json'
                 }
             }
         );
@@ -112,19 +115,31 @@ app.post('/generate-tts', async (req, res) => {
             response.data.audios[0]
                 .replace(/^data:audio\/wav;base64,/, '');
 
-        const fileName = `audio_${Date.now()}.wav`;
+        const fileName =
+            `audio_${Date.now()}.wav`;
 
-        const filePath = path.join(audioFolder, fileName);
+        const filePath =
+            path.join(audioFolder, fileName);
+
+        console.log("Saving to:", filePath);
+        console.log("Audio length:", base64Audio.length);
 
         fs.writeFileSync(
             filePath,
             Buffer.from(base64Audio, 'base64')
         );
 
-        console.log("FILE SAVED:", filePath);
+        console.log("File saved successfully");
+
+        const files =
+            fs.readdirSync(audioFolder);
+
+        console.log("Current files:", files);
 
         const audioUrl =
             `https://${req.get('host')}/audio/${fileName}`;
+
+        console.log("Audio URL:", audioUrl);
 
         res.json({
             audioUrl
@@ -133,13 +148,13 @@ app.post('/generate-tts', async (req, res) => {
     } catch (err) {
 
         console.log(
+            "TTS ERROR:",
             err.response?.data || err.message
         );
 
         res.status(500).json({
             error: 'TTS Failed'
         });
-
     }
 });
 
@@ -160,8 +175,10 @@ app.get('/test-tamil', async (req, res) => {
             },
             {
                 headers: {
-                    'api-subscription-key': process.env.SARVAM_API_KEY,
-                    'Content-Type': 'application/json'
+                    'api-subscription-key':
+                    process.env.SARVAM_API_KEY,
+                    'Content-Type':
+                    'application/json'
                 }
             }
         );
@@ -178,10 +195,17 @@ app.get('/test-tamil', async (req, res) => {
             Buffer.from(base64Audio, 'base64')
         );
 
+        console.log("test.wav created");
+
         res.send(`
+        <html>
+        <body>
+            <h2>Tamil Audio Test</h2>
             <audio controls autoplay>
                 <source src="/audio/test.wav" type="audio/wav">
             </audio>
+        </body>
+        </html>
         `);
 
     } catch (err) {
@@ -191,9 +215,7 @@ app.get('/test-tamil', async (req, res) => {
         );
 
         res.send('Sarvam failed');
-
     }
-
 });
 
 // =====================================
