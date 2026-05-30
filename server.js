@@ -166,6 +166,9 @@ app.get('/test-tamil', async (req, res) => {
 
     try {
 
+        console.log("SARVAM KEY EXISTS:", !!process.env.SARVAM_API_KEY);
+        console.log("KEY LENGTH:", process.env.SARVAM_API_KEY?.length);
+
         const response = await axios.post(
             'https://api.sarvam.ai/text-to-speech',
             {
