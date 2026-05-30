@@ -134,8 +134,7 @@ app.post('/generate-tts', async (req, res) => {
 
         // PUBLIC URL
         const audioUrl =
-        `${req.protocol}://${req.get('host')}/audio/${fileName}`;
-
+`https://${req.get('host')}/audio/${fileName}`;
         console.log(audioUrl);
 
         // SEND URL
